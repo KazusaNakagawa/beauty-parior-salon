@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: ./compose/prod/Dockerfile
     image: "${ECR_IMAGE}"
-    container_name: beauty-parlor-salon
+    container_name: beauty-parlor-salon-prod
     ports:
       - "9000:8080"
     tty: true
