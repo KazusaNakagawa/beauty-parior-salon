@@ -1,25 +1,25 @@
 version: '3.8'
 
 services:
-  lambda-fastapi-prod:
+  beauty-parlor-salon-prod:
     platform: linux/amd64
     build:
       context: .
       dockerfile: ./compose/prod/Dockerfile
     image: "${ECR_IMAGE}"
-    container_name: lambda-fastapi-prod
+    container_name: beauty-parlor-salon-prod
     ports:
       - "9000:8080"
     tty: true
     stdin_open: true
 
-  lambda-fastapi-dev:
+  beauty-parlor-salon-dev:
     platform: linux/amd64
     build:
       context: .
       dockerfile: ./compose/dev/Dockerfile
-    image: lambda-fastapi-dev:latest
-    container_name: lambda-fastapi-dev
+    image: beauty-parlor-salon-dev:latest
+    container_name: beauty-parlor-salon-dev
     volumes:
       - ./src:/usr/src/app/src
     ports:
