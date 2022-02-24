@@ -1,10 +1,17 @@
 FROM python:3.9.1-alpine
 
+RUN apk --update add \
+    bash \
+    sqlite \
+    sudo \
+    wget \
+    vim
+
 WORKDIR /usr/src/app
 
 COPY ./requirements/dev.txt ./
 
-RUN python3 -m ensurepip && \
+RUN pip install --upgrade pip && \
     pip install -r dev.txt
 
 ENV PYTHONPATH "${PYTHONPATH}:/usr/src/app/src"
