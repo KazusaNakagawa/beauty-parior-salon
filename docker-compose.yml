@@ -1,17 +1,35 @@
 version: '3.8'
 
 services:
-  beauty-parlor-salon-prod:
-    platform: linux/amd64
-    build:
-      context: .
-      dockerfile: ./compose/prod/Dockerfile
-    image: "${ECR_IMAGE}"
-    container_name: beauty-parlor-salon-prod
+  mariadb:
+    image: "mariadb:${TAG}"
+    container_name: "mariadb${TAG}"
+    env_file: .env
+    restart: always
     ports:
-      - "9000:8080"
+      - "${DB_PORT}:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: "${DATABASE}"
+      MYSQL_ROOT_USER: "${MYSQL_USER}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      TZ: Asia/Tokyo
     tty: true
     stdin_open: true
+
+# TODO: Because AWS cannot support DB
+#  beauty-parlor-salon-prod:
+#    platform: linux/amd64
+#    build:
+#      context: .
+#      dockerfile: compose/prod/Dockerfile
+#    image: "${ECR_IMAGE}"
+#    container_name: beauty-parlor-salon-prod
+#    ports:
+#      - "9000:8080"
+
 
   beauty-parlor-salon-dev:
     platform: linux/amd64
@@ -21,6 +39,16 @@ services:
     image: beauty-parlor-salon-dev:latest
     container_name: beauty-parlor-salon-dev
     volumes:
-      - ./src:/usr/src/app/src
+      - '.:/work'
     ports:
       - "8000:8000"
+    tty: true
+    stdin_open: true
+
+    depends_on:
+      - mariadb
+    links:
+      - mariadb
+
+volumes:
+  db-data:

@@ -1,19 +1,45 @@
-FROM python:3.9.1-alpine
+FROM ubuntu:22.04
 
-RUN apk --update add \
-    bash \
-    sqlite \
+ENV PYTHON_VERSION=3.9.1
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    libncurses5-dev \
+    libgdbm-dev \
+    libnss3-dev \
+    libssl-dev \
+    libreadline-dev \
+    libffi-dev \
+    libsqlite3-dev \
+    libbz2-dev \
+    mysql-client \
     sudo \
+    vim \
     wget \
-    vim
+    zlib1g-dev
 
-WORKDIR /usr/src/app
+# root権限意外でも扱えるようにする 共有サーバとか
+WORKDIR /opt
 
+# https://phoenixnap.com/kb/how-to-install-python-3-ubuntu
+RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz && \
+    tar -xf Python-$PYTHON_VERSION.tgz && \
+    rm -f Python-$PYTHON_VERSION.tgz
+
+WORKDIR /opt/Python-$PYTHON_VERSION
+
+RUN ./configure && \
+    make && \
+    make install
+#
+ENV PATH /opt/python/bin:$PATH
+#
 COPY ./requirements/dev.txt ./
+RUN pip3 install --upgrade pip && \
+    pip3 install -r dev.txt
 
-RUN pip install --upgrade pip && \
-    pip install -r dev.txt
+COPY . .
 
-ENV PYTHONPATH "${PYTHONPATH}:/usr/src/app/src"
-
+WORKDIR /work
 CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
