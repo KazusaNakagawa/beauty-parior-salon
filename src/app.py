@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File
 from mangum import Mangum
 
 from fastapi import Depends, HTTPException, Request, Response
@@ -74,6 +74,11 @@ def create_item_for_user(
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
+
+
+@app.post("/files/")
+async def create_file(file: bytes = File(...)):
+    return {"file_size": len(file)}
 
 
 handler = Mangum(app)
