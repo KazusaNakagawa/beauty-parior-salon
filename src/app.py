@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File
+from fastapi import FastAPI, File, UploadFile
 from mangum import Mangum
 
 from fastapi import Depends, HTTPException, Request, Response
@@ -78,7 +78,32 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 @app.post("/files/")
 async def create_file(file: bytes = File(...)):
+    """
+    curl -X 'POST' \
+      'http://0.0.0.0:8000/files/' \
+      -H 'accept: application/json' \
+      -H 'Content-Type: multipart/form-data' \
+      -F 'file=@sample.m4a;type=audio/x-m4a'
+
+    :param file:
+    :return:
+    """
     return {"file_size": len(file)}
+
+
+@app.post("/uploadfile/")
+async def create_upload_file(upload_file: UploadFile):
+    """
+    curl -X 'POST' \
+      'http://0.0.0.0:8000/uploadfile/' \
+      -H 'accept: application/json' \
+      -H 'Content-Type: multipart/form-data' \
+      -F 'file=@sample.m4a;type=audio/x-m4a'
+
+    :param upload_file:
+    :return:
+    """
+    return {"filename": upload_file.filename}
 
 
 handler = Mangum(app)
