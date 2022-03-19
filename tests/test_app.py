@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+
 from src.app import app
 
 client = TestClient(app)
@@ -26,6 +27,25 @@ def test_create_file():
     response = client.post("/files-from/", files=files, data=payload)
 
     assert response.status_code == 200
-    assert response.json() == {'file_size': 0,
-                               'fileb_content_type': 'audio/x-m4a',
-                               'manager_user_id': 'm00001'}
+    assert response.json() == {
+        'file_size': 0,
+        'fileb_content_type': 'audio/x-m4a',
+        'manager_user_id': 'm00001'}
+
+
+def test_create_user():
+    response = client.post(
+        "/users/",
+        json={"name": "test_user", "email": "deadpool@example.com", "password": "chimichangas4life"},
+    )
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["email"] == "deadpool@example.com"
+    assert "id" in data
+    user_id = data["id"]
+
+    response = client.get(f"/users/{user_id}")
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["email"] == "deadpool@example.com"
+    assert data["id"] == user_id
