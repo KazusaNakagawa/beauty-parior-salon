@@ -36,9 +36,17 @@ async def db_session_middleware(request: Request, call_next):
     return response
 
 
+# # Dependency
+# def get_db(request: Request):
+#     return request.state.db
+
 # Dependency
-def get_db(request: Request):
-    return request.state.db
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.post("/users/", response_model=schemas.User)
