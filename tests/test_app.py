@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from src.app import app
@@ -49,3 +50,30 @@ def test_create_user():
     data = response.json()
     assert data["email"] == "deadpool@example.com"
     assert data["id"] == user_id
+
+
+def test_delete_user(user_id=1):
+    response = client.delete(f"/users/{user_id}")
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert "id" in data
+    res_user_id = data["id"]
+    assert res_user_id == user_id
+
+
+def test_my_fruit(my_fruit):
+    assert my_fruit == 'apple'
+
+
+def test_client_user(client_user, user_id=1):
+    res = client_user(user_id=user_id)
+    res2 = res.__next__()
+    assert res2.status_code == 200
+    assert res2.json() == {
+        'name': 'test_user',
+        'email': 'deadpool@example.com',
+        'id': user_id,
+        'is_active': True,
+        'items': []
+    }
+    res.__next__()
