@@ -66,18 +66,20 @@ def get_db():
         db.close()
 
 
-# @app.post("/users/", response_model=schemas.User)
-# def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-#     db_user = crud.get_user_by_email(db, email=user.email)
-#     if db_user:
-#         raise HTTPException(status_code=400, detail="Email already registered")
-#     return crud.create_user(db=db, user=user)
-#
-#
-# @app.get("/users/", response_model=list[schemas.User])
-# def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     users = crud.get_users(db, skip=skip, limit=limit)
-#     return users
+@app.post("/users/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return crud.create_user(db=db, user=user)
+
+
+@app.get("/users/", response_model=list[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return users
+
+
 #
 #
 # @app.get("/users/{user_id}", response_model=schemas.User)
@@ -189,16 +191,6 @@ SECRET_KEY = "ea7532c3afb46f1129d620ebfae641119511c10dc62fcd3ce33722cce56938a9"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-fake_users_db = {
-    "john": {
-        "username": "john",
-        # "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    }
-}
-
 
 class Token(BaseModel):
     access_token: str
@@ -209,28 +201,19 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-    # full_name: Optional[str] = None
-    disabled: Optional[bool] = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def verify_password(plain_password, hashed_password):
+    """
+
+    :param plain_password:
+    :param hashed_password:
+    :return:
+    """
     return pwd_context.verify(plain_password, hashed_password)
-
-
-# def get_password_hash(password):
-#     return pwd_context.hash(password)
 
 
 def get_user(db, username: str):
@@ -259,15 +242,31 @@ def get_user(db, username: str):
     :param username:
     :return:
     """
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
+    # TODO: mock user
+    user = crud.get_user(db, user_id=2)
+    username_db = {
+        username: {
+            'username': user.username,
+            'email': user.email,
+            'hashed_password': user.hashed_password,
+            'disabled': user.disabled,
+        }
+    }
+    if username in username_db:
+        user_dict = username_db[username]
+        return schemas.UserInDB(**user_dict)
 
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(db, username: str, password: str):
+    """
+    Note:
+      (Pdb) verify_password(password, user.hashed_password)
+      *** passlib.exc.UnknownHashError: hash could not be identified
+    """
+    user = get_user(db, username)
     if not user:
         return False
+    pdb.set_trace()
     if not verify_password(password, user.hashed_password):
         return False
     return user
@@ -291,7 +290,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -306,13 +305,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
+async def get_current_active_user(current_user: schemas.User = Depends(get_current_user)):
     print('current_user: L309', current_user)
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -320,12 +319,13 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                                 db: Session = Depends(get_db)
+                                 ):
     """ API: login
     TODO: fake_user_db -> db
     """
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    print('user L317', user)
+    user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -339,11 +339,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
+@app.get("/users/me/", response_model=schemas.User)
+async def read_users_me(current_user: schemas.User = Depends(get_current_active_user)):
     return current_user
 
 
 @app.get("/users/me/items/")
-async def read_own_items(current_user: User = Depends(get_current_active_user)):
+async def read_own_items(current_user: schemas.User = Depends(get_current_active_user)):
     return [{"item_id": "Foo", "owner": current_user.username}]

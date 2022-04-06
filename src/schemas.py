@@ -21,8 +21,8 @@ class Item(ItemBase):
 
 
 class UserBase(BaseModel):
-    name: str
-    email: str
+    username: str
+    email: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -30,9 +30,16 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    id: int
-    is_active: bool
+    # id: int
+    # username: str
+    # email: Optional[str] = None
+    # is_active: bool
+    disabled: Optional[bool] = None
     items: list[Item] = []
 
     class Config:
         orm_mode = True
+
+
+class UserInDB(User):
+    hashed_password: str
