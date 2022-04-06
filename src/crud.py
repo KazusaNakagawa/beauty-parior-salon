@@ -1,7 +1,38 @@
+import uvicorn
+from datetime import datetime, timedelta
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    UploadFile,
+    status,
+    HTTPException,
+    Request,
+    Response,
+)
+
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 from . import models, schemas
+
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from mangum import Mangum
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from typing import Optional
+
+import pdb
+
+SECRET_KEY = "ea7532c3afb46f1129d620ebfae641119511c10dc62fcd3ce33722cce56938a9"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def get_user(db: Session, user_id: int):
@@ -18,7 +49,6 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def get_password_hash(password):
     """ Convert password to hash """
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
 
 
@@ -33,6 +63,93 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def verify_password(plain_password, hashed_password):
+    """
+
+    :param plain_password:
+    :param hashed_password:
+    :return:
+    """
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_username(db, username: str):
+    """
+    >>> db: dict
+    {
+     'john': {
+       'username': 'john',
+       'full_name': 'John Doe',
+       'email': 'johndoe@example.com',
+       'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
+       'disabled': False
+      }
+    }
+
+    >>> db[username]: dict
+    {
+     'username': 'john',
+     'full_name': 'John Doe',
+     'email': 'johndoe@example.com',
+     'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
+     'disabled': False
+    }
+
+    :param db:
+    :param username:
+    :return:
+    """
+    # TODO: mock user
+    user = get_user(db, user_id=2)
+    username_db = {
+        username: {
+            'username': user.username,
+            'email': user.email,
+            'hashed_password': user.hashed_password,
+            'disabled': user.disabled,
+        }
+    }
+    if username in username_db:
+        user_dict = username_db[username]
+        return schemas.UserInDB(**user_dict)
+
+
+def authenticate_user(db, username: str, password: str):
+    """
+    Note:
+      (Pdb) verify_password(password, user.hashed_password)
+      *** passlib.exc.UnknownHashError: hash could not be identified
+    """
+    user = get_username(db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """
+
+    :param data: {'sub': 'john'}
+    :param expires_delta: datetime.timedelta(seconds=1800)
+    :return:
+    """
+    pdb.set_trace()
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 def delete_user(db: Session, user_id: int):
