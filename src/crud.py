@@ -18,6 +18,8 @@ from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from functools import lru_cache
+
 from jose import JWTError, jwt
 from mangum import Mangum
 from passlib.context import CryptContext
@@ -25,9 +27,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from . import const, models, schemas
+from . import config, models, schemas
 
 import pdb
+
+config_ = config.Settings()
 
 
 def get_user(db: Session, user_id: int):
@@ -115,6 +119,25 @@ def get_username(db, username: str):
         return schemas.UserInDB(**user_dict)
 
 
+def create_access_token(
+        data: dict, expires_delta: Optional[timedelta] = None):
+    """
+
+    :param data: {'sub': 'john'}
+    :param expires_delta: datetime.timedelta(seconds=1800)
+    :return:
+    """
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    pdb.set_trace()
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, config_.secret_key, algorithm=config_.algorithm)
+    return encoded_jwt
+
+
 def authenticate_user(db, username: str, password: str):
     """
     Note:
@@ -127,24 +150,6 @@ def authenticate_user(db, username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """
-
-    :param data: {'sub': 'john'}
-    :param expires_delta: datetime.timedelta(seconds=1800)
-    :return:
-    """
-    pdb.set_trace()
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, const.SECRET_KEY, algorithm=const.ALGORITHM)
-    return encoded_jwt
 
 
 def delete_user(db: Session, user_id: int):
