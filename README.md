@@ -22,5 +22,34 @@
 5. Create Lambda Function
 6. `sls deploy`
 7. test API endpoint
+
+## .env list
+The list of `.env` is raised below
+
+```bash
+# aws
+ECR_IMAGE=xxx
+ECR_DIGEST=sha256:xxx
+REGION=ap-northeast-1
+
+# mariadb
+TAG=10.7.1
+
+DB_PORT=3306
+DATABASE=xxx
+MYSQL_DATABASE=xxx
+
+TEST_DATABASE=xxx
+
+## user
+MYSQL_USER=xxx
+MYSQL_PASSWORD=xxx
+
+MYSQL_ROOT_USER=xxx
+MYSQL_ROOT_PASSWORD=xxx
+
+# const
+SECRET_KEY=xxx
+```
    
 ## Reference
