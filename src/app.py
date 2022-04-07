@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from . import crud, models, schemas
+from . import const, crud, models, schemas
 from .database import SessionLocal, engine
 
 import pdb
@@ -183,13 +183,6 @@ Password: secret
 
 """
 
-# to get a string like this run:
-# generate CMD: openssl rand -hex 32
-# TODO: 適切なファイルに移動すろ
-SECRET_KEY = "ea7532c3afb46f1129d620ebfae641119511c10dc62fcd3ce33722cce56938a9"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
@@ -200,8 +193,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print('payload: L296', payload)
+        payload = jwt.decode(token, const.SECRET_KEY, algorithms=[const.ALGORITHM])
+        print('payload: L204', payload)
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -233,7 +226,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=const.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = crud.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )

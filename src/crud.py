@@ -16,9 +16,6 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
-from . import models, schemas
-
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -28,11 +25,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional
 
-import pdb
+from . import const, models, schemas
 
-SECRET_KEY = "ea7532c3afb46f1129d620ebfae641119511c10dc62fcd3ce33722cce56938a9"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+import pdb
 
 
 def get_user(db: Session, user_id: int):
@@ -148,7 +143,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, const.SECRET_KEY, algorithm=const.ALGORITHM)
     return encoded_jwt
 
 
