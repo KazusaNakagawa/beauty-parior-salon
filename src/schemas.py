@@ -21,6 +21,7 @@ class Item(ItemBase):
 
 
 class UserBase(BaseModel):
+    id: int
     username: str
     email: Optional[str] = None
 
@@ -30,9 +31,6 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    # id: int
-    # username: str
-    # email: Optional[str] = None
     # is_active: bool
     disabled: Optional[bool] = None
     items: list[Item] = []
