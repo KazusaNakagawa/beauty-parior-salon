@@ -31,6 +31,7 @@ from . import config, models, schemas
 
 import pdb
 
+# TODO: I want to be able to properly reference configuration values from app.py
 config_ = config.Settings()
 
 
@@ -39,6 +40,8 @@ def get_user(db: Session, user_id: int):
 
 
 def get_user_username(db: Session, username: str):
+    pdb.set_trace()
+
     return db.query(models.User).filter(models.User.username == username).first()
 
 
@@ -83,43 +86,24 @@ def verify_password(plain_password, hashed_password):
 
 
 def get_username(db, username: str):
-    """
-    >>> db: dict
-    {
-     'john': {
-       'username': 'john',
-       'full_name': 'John Doe',
-       'email': 'johndoe@example.com',
-       'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-       'disabled': False
-      }
-    }
-
-    >>> db[username]: dict
-    {
-     'username': 'john',
-     'full_name': 'John Doe',
-     'email': 'johndoe@example.com',
-     'hashed_password': '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-     'disabled': False
-    }
+    """ Verify that the specified user exists
 
     :param db:
     :param username:
-    :return:
+    :return: schemas.UserInDB
     """
     user = get_user_username(db, username=username)
-    username_db = {
-        username: {
-            'username': user.username,
-            'email': user.email,
-            'hashed_password': user.hashed_password,
-            'disabled': user.disabled,
+    if user:
+        username_db = {
+            username: {
+                'username': user.username,
+                'email': user.email,
+                'hashed_password': user.hashed_password,
+            }
         }
-    }
-    if username in username_db:
         user_dict = username_db[username]
         return schemas.UserInDB(**user_dict)
+    return None
 
 
 def create_access_token(
