@@ -67,6 +67,7 @@ def get_username(db, username: str):
     if user:
         username_db = {
             username: {
+                'id': user.id,
                 'username': user.username,
                 'email': user.email,
                 'hashed_password': user.hashed_password,
