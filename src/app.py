@@ -74,8 +74,8 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user_email = crud.get_user_by_email(db, email=user.email)
     if db_user_email:
         raise HTTPException(status_code=400, detail="Email already registered")
-    db_user_username = crud.get_user_username(db, username=user.username)
-    if db_user_username:
+    db_user_name = crud.get_user_name(db, name=user.name)
+    if db_user_name:
         raise HTTPException(status_code=400, detail="UserName already registered")
     return crud.create_user(db=db, user=user)
 
@@ -102,7 +102,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = crud.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.name}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -133,7 +133,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         token_data = schemas.TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = crud.get_username(db, username=token_data.username)
+    user = crud.get_username(db, name=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -158,7 +158,7 @@ async def read_users_me(current_user: schemas.User = Depends(get_current_active_
 
 @app.get("/users/me/items/")
 async def read_own_items(current_user: schemas.User = Depends(get_current_active_user)):
-    return [{"item_id": "Foo", "owner": current_user.username}]
+    return [{"item_id": "Foo", "owner": current_user.name}]
 
 
 @app.get("/users/{user_id}", response_model=schemas.User)

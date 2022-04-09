@@ -21,8 +21,7 @@ class Item(ItemBase):
 
 
 class UserBase(BaseModel):
-    id: int
-    username: str
+    name: str
     email: Optional[str] = None
 
 
@@ -31,9 +30,10 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    # is_active: bool
+    id: int
     disabled: Optional[bool] = None
     items: list[Item] = []
+    # is_active: bool
 
     class Config:
         orm_mode = True
