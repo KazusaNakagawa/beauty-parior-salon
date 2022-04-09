@@ -16,8 +16,8 @@ def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_user_username(db: Session, username: str):
-    return db.query(models.User).filter(models.User.username == username).first()
+def get_user_name(db: Session, name: str):
+    return db.query(models.User).filter(models.User.name == name).first()
 
 
 def get_user_by_email(db: Session, email: str):
@@ -37,7 +37,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     """ hash を使って password を DB に格納 """
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
-        username=user.username,
+        name=user.name,
         email=user.email,
         hashed_password=hashed_password)
     db.add(db_user)
@@ -56,24 +56,24 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_username(db, username: str):
+def get_username(db, name: str):
     """ Verify that the specified user exists
 
     :param db:
-    :param username:
+    :param name:
     :return: schemas.UserInDB
     """
-    user = get_user_username(db, username=username)
+    user = get_user_name(db, name=name)
     if user:
-        username_db = {
-            username: {
+        user_db = {
+            name: {
                 'id': user.id,
-                'username': user.username,
+                'name': user.name,
                 'email': user.email,
                 'hashed_password': user.hashed_password,
             }
         }
-        user_dict = username_db[username]
+        user_dict = user_db[name]
         return schemas.UserInDB(**user_dict)
     return None
 
