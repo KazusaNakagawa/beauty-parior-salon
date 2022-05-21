@@ -86,14 +86,14 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
-@app.post("/token", response_model=schemas.Token)
+@app.post("/login/access-token", response_model=schemas.Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
                                  db: Session = Depends(get_db),
                                  settings: config.Settings = Depends(get_settings)
                                  ):
     """ API: login
     """
-    user = crud.authenticate_user(db, form_data.username, form_data.password)
+    user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
