@@ -21,7 +21,7 @@ class Item(ItemBase):
 
 
 class UserBase(BaseModel):
-    name: str
+    username: str
     email: Optional[str] = None
 
 
