@@ -7,7 +7,21 @@ client = TestClient(app)
 
 
 def test_read_main():
-    response = client.get("/users/")
+    # create user
+    response = client.post(
+        "/users/",
+        json={"username": "test_user", "email": "test@exsample.com", "password": "test"},
+    )
+    # login
+    response = client.post(
+        "/token",
+        data={"username": "test_user", "password": "test"},
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.get("/users/me/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    response = client.get("/users/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
 
 
@@ -28,10 +42,7 @@ def test_create_file():
     response = client.post("/files-from/", files=files, data=payload)
 
     assert response.status_code == 200
-    assert response.json() == {
-        'file_size': 0,
-        'fileb_content_type': 'audio/x-m4a',
-        'manager_user_id': 'm00001'}
+    assert response.json() == {"file_size": 0, "fileb_content_type": "audio/x-m4a", "manager_user_id": "m00001"}
 
 
 def test_create_user():
@@ -62,7 +73,7 @@ def test_delete_user(user_id=1):
 
 
 def test_my_fruit(my_fruit):
-    assert my_fruit == 'apple'
+    assert my_fruit == "apple"
 
 
 def test_client_user(client_user, user_id=1):
@@ -70,10 +81,10 @@ def test_client_user(client_user, user_id=1):
     res2 = res.__next__()
     assert res2.status_code == 200
     assert res2.json() == {
-        'name': 'test_user',
-        'email': 'deadpool@example.com',
-        'id': user_id,
-        'is_active': True,
-        'items': []
+        "name": "test_user",
+        "email": "deadpool@example.com",
+        "id": user_id,
+        "is_active": True,
+        "items": [],
     }
     res.__next__()
