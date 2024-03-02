@@ -12,8 +12,8 @@ client = TestClient(app)
 # ref: https://fastapi.tiangolo.com/advanced/testing-database/
 # Test is sqlite
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-# GitHub Actions is MariaDB
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/fastapi_test_db?charset=utf8mb4"
+# Gihub Actions is postgres
+SQLALCHEMY_DATABASE_URL = "dialect+driver://username:password@host:port/database"
 
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
