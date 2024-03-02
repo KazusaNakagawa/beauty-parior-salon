@@ -6,6 +6,8 @@ services:
     container_name: "mariadb${TAG}"
     env_file: .env
     restart: always
+    healthcheck:
+      test: "exit 0"
     ports:
       - "${DB_PORT}:3306"
     volumes:
@@ -46,7 +48,8 @@ services:
     stdin_open: true
 
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     links:
       - mariadb
 
