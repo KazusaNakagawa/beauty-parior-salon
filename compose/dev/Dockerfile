@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-ENV PYTHON_VERSION=3.9.1
+ENV PYTHON_VERSION=3.12.1
 
 RUN apt-get update && apt-get install -y \
     build-essential \

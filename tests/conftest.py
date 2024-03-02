@@ -41,9 +41,9 @@ def my_fruit():
 
 @pytest.fixture
 def client_user():
-    """ ユーザーを作成し後処理で削除 """
-    def _client_user(
-            user_id=1, name='test_user', email='deadpool@example.com', password='chimichangas4life'):
+    """ユーザーを作成し後処理で削除"""
+
+    def _client_user(user_id=1, name="test_user", email="deadpool@example.com", password="chimichangas4life"):
         res = client.post(
             "/users/",
             json={

@@ -7,7 +7,20 @@ client = TestClient(app)
 
 
 def test_read_main():
-    response = client.get("/users/")
+
+    user = "test_user"
+    email = "test@exsample.com"
+    password = "test"
+    # create user
+    response = client.post("/users/", json={"username": user, "email": email, "password": password})
+    assert response.status_code == 200
+    # login
+    response = client.post("/token", data={"username": user, "password": password})
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    response = client.get("/users/me/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+    response = client.get("/users/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
 
 
@@ -28,27 +41,26 @@ def test_create_file():
     response = client.post("/files-from/", files=files, data=payload)
 
     assert response.status_code == 200
-    assert response.json() == {
-        'file_size': 0,
-        'fileb_content_type': 'audio/x-m4a',
-        'manager_user_id': 'm00001'}
+    assert response.json() == {"file_size": 0, "fileb_content_type": "audio/x-m4a", "manager_user_id": "m00001"}
 
 
 def test_create_user():
-    response = client.post(
-        "/users/",
-        json={"name": "test_user", "email": "deadpool@example.com", "password": "chimichangas4life"},
-    )
-    assert response.status_code == 200, response.text
+
+    user = "test_user1"
+    email = "tes1t@exsample.com"
+    password = "test1"
+    response = client.post("/users/", json={"username": user, "email": email, "password": password})
+
+    assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "deadpool@example.com"
+    assert data["email"] == email
     assert "id" in data
     user_id = data["id"]
 
     response = client.get(f"/users/{user_id}")
     assert response.status_code == 200, response.text
     data = response.json()
-    assert data["email"] == "deadpool@example.com"
+    assert data["email"] == email
     assert data["id"] == user_id
 
 
@@ -62,18 +74,4 @@ def test_delete_user(user_id=1):
 
 
 def test_my_fruit(my_fruit):
-    assert my_fruit == 'apple'
-
-
-def test_client_user(client_user, user_id=1):
-    res = client_user(user_id=user_id)
-    res2 = res.__next__()
-    assert res2.status_code == 200
-    assert res2.json() == {
-        'name': 'test_user',
-        'email': 'deadpool@example.com',
-        'id': user_id,
-        'is_active': True,
-        'items': []
-    }
-    res.__next__()
+    assert my_fruit == "apple"

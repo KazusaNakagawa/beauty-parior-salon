@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -29,17 +29,14 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 
 def get_password_hash(password):
-    """ Convert password to hash """
+    """Convert password to hash"""
     return pwd_context.hash(password)
 
 
 def create_user(db: Session, user: schemas.UserCreate):
-    """ hash を使って password を DB に格納 """
+    """hash を使って password を DB に格納"""
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password)
+    db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -57,7 +54,7 @@ def verify_password(plain_password, hashed_password):
 
 
 def get_username(db, username: str):
-    """ Verify that the specified user exists
+    """Verify that the specified user exists
 
     :param db:
     :param username:
@@ -67,10 +64,10 @@ def get_username(db, username: str):
     if user:
         username_db = {
             username: {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'hashed_password': user.hashed_password,
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "hashed_password": user.hashed_password,
             }
         }
         user_dict = username_db[username]
@@ -78,8 +75,7 @@ def get_username(db, username: str):
     return None
 
 
-def create_access_token(
-        data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
 
     :param data: {'sub': 'john'}
@@ -88,9 +84,9 @@ def create_access_token(
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, config_.secret_key, algorithm=config_.algorithm)
     return encoded_jwt
@@ -130,3 +126,27 @@ def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
     db.commit()
     db.refresh(db_item)
     return db_item
+
+
+def put_item(db: Session, item: schemas.ItemCreate, user_id: int):
+    db_item = db.query(models.Item).filter(models.Item.owner_id == user_id).first()
+    if db_item is None:
+        return None
+    for var, value in vars(item).items():
+        setattr(db_item, var, value) if value else None
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def update_user(db: Session, user: schemas.UserCreate, user_id: int, item_id: int):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
+
+    if db_user is None:
+        return None
+    for var, value in vars(user).items():
+        setattr(db_user, var, value) if value else None
+    db.commit()
+    db.refresh(db_user)
+    return db_user
