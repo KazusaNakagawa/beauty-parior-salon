@@ -138,7 +138,7 @@ SECRET_KEY=xxx
    ROLLBACK;
    ```
     2 箇所から mysql にアクセスし、トランザクションを開始すると、デッドロックが発生する。
-    ![alt text](image.png)
+    ![alt text](./docs/image.png)
 
 ## Reference
 
