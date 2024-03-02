@@ -11,11 +11,12 @@ client = TestClient(app)
 
 # ref: https://fastapi.tiangolo.com/advanced/testing-database/
 # Test is sqlite
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+# SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+# GitHub Actions is MariaDB
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/fastapi_test_db?charset=utf8mb4"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Setup clean DB init
@@ -41,9 +42,9 @@ def my_fruit():
 
 @pytest.fixture
 def client_user():
-    """ ユーザーを作成し後処理で削除 """
-    def _client_user(
-            user_id=1, name='test_user', email='deadpool@example.com', password='chimichangas4life'):
+    """ユーザーを作成し後処理で削除"""
+
+    def _client_user(user_id=1, name="test_user", email="deadpool@example.com", password="chimichangas4life"):
         res = client.post(
             "/users/",
             json={

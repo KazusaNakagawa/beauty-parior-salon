@@ -71,3 +71,7 @@ def test_delete_user(user_id=1):
     assert "id" in data
     res_user_id = data["id"]
     assert res_user_id == user_id
+
+
+def test_my_fruit(my_fruit):
+    assert my_fruit == "apple"
