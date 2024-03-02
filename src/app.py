@@ -77,12 +77,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/token", response_model=schemas.Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(),
-                db: Session = Depends(get_db),
-                settings: config.Settings = Depends(get_settings)
-                ):
-    """ API: login
-    """
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+    settings: config.Settings = Depends(get_settings),
+):
+    """API: login"""
     user = crud.authenticate_user(db, username=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
@@ -91,16 +91,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = crud.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
+    access_token = crud.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme),
-                           db: Session = Depends(get_db),
-                           settings: config.Settings = Depends(get_settings),
-                           ):
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+    settings: config.Settings = Depends(get_settings),
+):
     """
     TODO: I want to move to crud.py, but get_db.,
         get_settings cannot be referenced from app.py and I get an AttributeError
@@ -116,7 +115,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     )
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        print('payload: L204', payload)
+        print("payload: L204", payload)
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -143,9 +142,11 @@ async def get_current_active_user(current_user: schemas.User = Depends(get_curre
 
 @app.get("/users/", response_model=list[schemas.User])
 def read_users(
-        skip: int = 0, limit: int = 100,
-        db: Session = Depends(get_db),
-        current_user: schemas.User = Depends(get_current_active_user)):
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(get_current_active_user),
+):
     """User Index
     >> current_user
     UserInDB(username='string',
@@ -183,6 +184,14 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
+@app.put("/users/{user_id}", response_model=schemas.User)
+def put_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.update_user(db, user_id=user_id, user=user)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+
 @app.delete("/users/{user_id}", response_model=schemas.User)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     db_user = crud.delete_user(db, user_id=user_id)
@@ -192,10 +201,13 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/users/{user_id}/items/", response_model=schemas.Item)
-def create_item_for_user(
-        user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
-):
+def create_item_for_user(user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)):
     return crud.create_user_item(db=db, item=item, user_id=user_id)
+
+
+@app.put("/users/{user_id}/items/{item_id}", response_model=schemas.Item)
+def put_item(user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)):
+    return crud.put_item(db=db, item=item, user_id=user_id)
 
 
 @app.get("/items/", response_model=list[schemas.Item])
@@ -207,6 +219,7 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 # -----------------------------
 # The following is a trial API
 # -----------------------------
+
 
 @app.post("/files/")
 async def create_file(file: bytes = File(...)):
@@ -240,9 +253,9 @@ async def create_upload_file(upload_file: UploadFile):
 
 @app.post("/files-from/")
 async def create_file(
-        file: bytes = File(...),
-        fileb: UploadFile = File(...),
-        manager_user_id: str = Form(...),
+    file: bytes = File(...),
+    fileb: UploadFile = File(...),
+    manager_user_id: str = Form(...),
 ):
     """
     curl -X 'POST' \
