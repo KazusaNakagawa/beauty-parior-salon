@@ -7,7 +7,7 @@ backen API Server
 ### local
 
 - Docker Container
-  - Python: 3.9.1, 3.12.1
+  - Python: 3.12.1, FastAPI
   - MySQL: 8.0
   - MariaDB: 11.3
 - Mac M1
