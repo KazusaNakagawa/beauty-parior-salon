@@ -17,7 +17,7 @@ class Item(ItemBase):
     owner_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):
@@ -36,7 +36,7 @@ class User(UserBase):
     # is_active: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserInDB(User):
