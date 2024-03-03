@@ -75,3 +75,21 @@ def test_delete_user(user_id=1):
 
 def test_my_fruit(my_fruit):
     assert my_fruit == "apple"
+
+
+def test_put_user(user_id=1):
+    """Update user"""
+
+    # create user
+    user = "test_user"
+    email = "test@exsample.com"
+    password = "test"
+    response = client.post("/users/", json={"username": user, "email": email, "password": password})
+    assert response.status_code == 200
+    # UT
+    response = client.put(
+        f"/users/{user_id}",
+        json={"username": "string11", "email": "string111", "password": "string111"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {"username": "string11", "email": "string111", "id": 1, "disabled": False, "items": []}

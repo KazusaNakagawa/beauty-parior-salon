@@ -139,9 +139,8 @@ def put_item(db: Session, item: schemas.ItemCreate, user_id: int):
     return db_item
 
 
-def update_user(db: Session, user: schemas.UserCreate, user_id: int, item_id: int):
+def update_user(db: Session, user: schemas.UserCreate, user_id: int) -> Optional[models.User]:
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    db_item = db.query(models.Item).filter(models.Item.id == item_id).first()
 
     if db_user is None:
         return None
